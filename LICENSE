@@ -20,9 +20,3 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
----
-
-This license covers the conversion tools, the library, the viewer, and the
-documentation in this repository. It does not cover the Soda Hall model files
-under data/source/ or the meshes derived from them, which are Michael Kofler's
-work redistributed as described in README.md.
