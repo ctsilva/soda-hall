@@ -1,6 +1,7 @@
 // Builds the viewer window and maps tree checkboxes onto viewport parts. Floor rows toggle
-// the floor's shell; room rows toggle the room's shell and furniture together, with the
-// display toggles filtering by kind on top.
+// the floor's shell, room rows toggle the room's shell and furniture together, and model
+// rows (the WALKTHRU files) toggle one shell, with the display toggles filtering by kind on
+// top.
 #include "main_window.hpp"
 
 #include <QAction>
@@ -32,6 +33,14 @@ constexpr int kInitialPanelWidth = 320;
 constexpr int kInitialViewportWidth = 960;
 constexpr int kIdRole = Qt::UserRole;
 constexpr int kFloorRole = Qt::UserRole + 1;
+constexpr int kKindRole = Qt::UserRole + 2;  // One of kFloorKind, kRoomKind, kModelKind.
+const QString kFloorKind = "floor";
+const QString kRoomKind = "room";
+const QString kModelKind = "model";
+
+QString kindOf(const QTreeWidgetItem* item) {
+    return item->data(0, kKindRole).toString();
+}
 
 QString partKey(const std::string& id, const char* part) {
     return QString::fromStdString(id) + "/" + part;
@@ -66,6 +75,13 @@ QString floorDescription(const soda::Floor& floor) {
         .arg(furniture);
 }
 
+QString modelDescription(const soda::Model& model) {
+    return QString("%1\nShell: %2 triangles\nSource: %3")
+        .arg(QString::fromStdString(model.name))
+        .arg(model.shell.triangles)
+        .arg(QString::fromStdString(model.source.filename().string()));
+}
+
 }  // namespace
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
@@ -90,7 +106,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     controls_.tree->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
     controls_.tree->setMinimumHeight(kMinimumTreeHeight);
     controls_.tree->setToolTip("Check a floor to show its walls; check a room to show its "
-                               "walls and furniture. Double-click to frame.");
+                               "walls and furniture; check a WALKTHRU model to show the 1994 "
+                               "UniGrafix version. Double-click to frame.");
     layout->addWidget(controls_.tree, 1);
 
     controls_.info = new QLabel("Open manifest.json from the dataset directory.");
@@ -136,20 +153,10 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     command(viewMenu, "Frame selection", QKeySequence("Ctrl+Shift+E"), controls_.frameSelection);
     connect(controls_.frameVisible, &QPushButton::clicked, viewport_, &Viewport::frameVisible);
     connect(controls_.frameSelection, &QPushButton::clicked, this, [this] {
-        selectItem(controls_.tree->currentItem());
-        if (auto* item = controls_.tree->currentItem()) {
-            const auto id = item->data(0, kIdRole).toString().toStdString();
-            if (const auto* room = manifest_ ? manifest_->find_room(id) : nullptr) {
-                if (const auto bounds = room->bounds()) {
-                    viewport_->frame(*bounds);
-                }
-            } else if (const auto floor =
-                           manifest_ ? manifest_->find_floor(item->data(0, kFloorRole).toInt())
-                                     : nullptr) {
-                if (floor->bounds) {
-                    viewport_->frame(*floor->bounds);
-                }
-            }
+        auto* item = controls_.tree->currentItem();
+        selectItem(item);
+        if (const auto bounds = itemBounds(item)) {
+            viewport_->frame(*bounds);
         }
     });
     viewMenu->addSeparator();
@@ -268,6 +275,7 @@ bool MainWindow::load(const QString& filename, bool reportErrors) {
         floorItem->setCheckState(0, Qt::Unchecked);
         floorItem->setData(0, kIdRole, QString::fromStdString(floorId));
         floorItem->setData(0, kFloorRole, floor.number);
+        floorItem->setData(0, kKindRole, kFloorKind);
         floorItem->setToolTip(0, "Walls of the whole floor, without furniture");
         controls_.tree->addTopLevelItem(floorItem);
         items_.push_back(floorItem);
@@ -281,6 +289,7 @@ bool MainWindow::load(const QString& filename, bool reportErrors) {
             roomItem->setCheckState(0, Qt::Unchecked);
             roomItem->setData(0, kIdRole, QString::fromStdString(room.id));
             roomItem->setData(0, kFloorRole, room.floor);
+            roomItem->setData(0, kKindRole, kRoomKind);
             floorItem->addChild(roomItem);
             items_.push_back(roomItem);
             viewport_->addPart(partKey(room.id, "shell").toStdString(), PartKind::room_shell,
@@ -288,6 +297,20 @@ bool MainWindow::load(const QString& filename, bool reportErrors) {
             viewport_->addPart(partKey(room.id, "furniture").toStdString(), PartKind::furniture,
                                room.furniture.path, room.furniture.bounds);
         }
+    }
+    for (const auto& model : manifest->walkthru) {
+        auto* modelItem = new QTreeWidgetItem(QStringList{QString::fromStdString(model.name),
+                                                          QString::number(model.shell.triangles)});
+        modelItem->setFlags(modelItem->flags() | Qt::ItemIsUserCheckable);
+        modelItem->setCheckState(0, Qt::Unchecked);
+        modelItem->setData(0, kIdRole, QString::fromStdString(model.id));
+        modelItem->setData(0, kFloorRole, 0);
+        modelItem->setData(0, kKindRole, kModelKind);
+        modelItem->setToolTip(0, "The 1994 UniGrafix model the VRML export was made from");
+        controls_.tree->addTopLevelItem(modelItem);
+        items_.push_back(modelItem);
+        viewport_->addPart(partKey(model.id, "shell").toStdString(), PartKind::floor_shell,
+                           model.shell.path, model.shell.bounds);
     }
     manifest_ = std::move(manifest);
     manifestName_ = filename;
@@ -318,24 +341,41 @@ std::optional<int> MainWindow::currentFloor() const {
 }
 
 void MainWindow::applyItem(QTreeWidgetItem* item, bool reportErrors) {
-    // Floor rows own one part, room rows two. A read failure unchecks the row again.
+    // Room rows own two parts, floor and model rows one. A read failure unchecks the row.
     const auto id = item->data(0, kIdRole).toString().toStdString();
     const bool visible = item->checkState(0) == Qt::Checked;
-    const bool isFloor = item->parent() == nullptr;
+    const bool isRoom = kindOf(item) == kRoomKind;
     try {
         viewport_->setPartVisible(partKey(id, "shell").toStdString(), visible);
-        if (!isFloor) {
+        if (isRoom) {
             viewport_->setPartVisible(partKey(id, "furniture").toStdString(), visible);
         }
     } catch (const std::exception& e) {
         const QSignalBlocker blocker(controls_.tree);
         item->setCheckState(0, Qt::Unchecked);
         viewport_->setPartVisible(partKey(id, "shell").toStdString(), false);
-        if (!isFloor) {
+        if (isRoom) {
             viewport_->setPartVisible(partKey(id, "furniture").toStdString(), false);
         }
         reportError("Could not read a mesh", e.what(), reportErrors);
     }
+}
+
+std::optional<soda::Bounds> MainWindow::itemBounds(QTreeWidgetItem* item) const {
+    if (!item || !manifest_) {
+        return std::nullopt;
+    }
+    const auto id = item->data(0, kIdRole).toString().toStdString();
+    if (const auto* room = manifest_->find_room(id)) {
+        return room->bounds();
+    }
+    if (const auto* model = manifest_->find_model(id)) {
+        return model->shell.bounds;
+    }
+    if (const auto* floor = manifest_->find_floor(item->data(0, kFloorRole).toInt())) {
+        return floor->bounds;
+    }
+    return std::nullopt;
 }
 
 bool MainWindow::showPart(const std::string& id, bool visible, bool reportErrors) {
@@ -352,9 +392,10 @@ bool MainWindow::showPart(const std::string& id, bool visible, bool reportErrors
 }
 
 void MainWindow::showBuilding() {
+    // Floor shells only: the WALKTHRU models cover the same walls and would z-fight.
     const QSignalBlocker blocker(controls_.tree);
     for (auto* item : items_) {
-        const bool isFloor = item->parent() == nullptr;
+        const bool isFloor = kindOf(item) == kFloorKind;
         item->setCheckState(0, isFloor ? Qt::Checked : Qt::Unchecked);
         applyItem(item, true);
     }
@@ -390,11 +431,12 @@ void MainWindow::selectItem(QTreeWidgetItem* item) {
         return;
     }
     const auto id = item->data(0, kIdRole).toString().toStdString();
+    viewport_->setSelection(itemBounds(item));
     if (const auto* room = manifest_->find_room(id)) {
-        viewport_->setSelection(room->bounds());
         controls_.info->setText(roomDescription(*room));
+    } else if (const auto* model = manifest_->find_model(id)) {
+        controls_.info->setText(modelDescription(*model));
     } else if (const auto* floor = manifest_->find_floor(item->data(0, kFloorRole).toInt())) {
-        viewport_->setSelection(floor->bounds);
         controls_.info->setText(floorDescription(*floor));
     }
 }

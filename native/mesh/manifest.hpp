@@ -43,6 +43,15 @@ struct Floor {
     std::vector<Room> rooms;
 };
 
+// A standalone model outside the floor/room structure: the 1994 WALKTHRU UniGrafix files,
+// converted to the same frame. Shell only; these carry no furniture.
+struct Model {
+    std::string id;                // e.g. "walkthru-building".
+    std::string name;              // Display name.
+    std::filesystem::path source;  // The file it was converted from, absolute.
+    Part shell;
+};
+
 struct Manifest {
     std::filesystem::path directory;  // The dataset root; part paths are already resolved.
     std::string name;
@@ -51,9 +60,11 @@ struct Manifest {
     std::string up;  // Axis name, "z" for this dataset.
     std::optional<Bounds> bounds;
     std::vector<Floor> floors;
+    std::vector<Model> walkthru;  // Empty when the dataset was built without the WALKTHRU files.
 
     const Room* find_room(const std::string& id) const;
     const Floor* find_floor(int number) const;
+    const Model* find_model(const std::string& id) const;
 };
 
 // Loads manifest.json. Throws runtime_error for unreadable files, malformed JSON, or missing

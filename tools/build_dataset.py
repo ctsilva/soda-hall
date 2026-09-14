@@ -11,6 +11,8 @@ and writes a self-describing dataset:
       rooms/floor-3/room-319.shell.off
       rooms/floor-3/room-319.furniture.off
       floorplans/floor-3.gif        the site's floor plan bitmaps
+      walkthru/building.shell.off   the 1994 WALKTHRU UniGrafix models, if source/walkthru
+      walkthru/floor-5.shell.off    holds them (they are not part of Kofler's site)
       source/                       the original .wrl.gz files, untouched
 
 Meshes are triangulated OFF files with an RGB color after each face, in the building's
@@ -29,9 +31,15 @@ from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import unigrafix  # noqa: E402
 import vrml1  # noqa: E402
 
 FLOOR_NUMBERS = range(2, 8)
+# The WALKTHRU files that may sit in source/walkthru, with their dataset ids and names.
+WALKTHRU_MODELS = [
+    ("csb3r.macro.ug", "walkthru-building", "WALKTHRU model, whole building (1994)"),
+    ("csb5.macro.ug", "walkthru-floor-5", "WALKTHRU model, floor 5 (1994)"),
+]
 ROOM_FILE = re.compile(r"^room(\d)(stair(\d)|[0-9a-z]+)\.wrl\.gz$")
 FLOOR_PLAN_NAMES = {2: "2ndfloor", 3: "3rdfloor", 4: "4thfloor", 5: "5thfloor", 6: "6thfloor",
                     7: "7thfloor"}
@@ -111,6 +119,33 @@ def convert_floor_shell(source, output_dir, floor):
         "triangles": len(scene.shell.triangles),
         "bounds": bounds_json(scene.shell),
     }
+
+
+def convert_walkthru(output_dir):
+    """Converts whichever WALKTHRU files are present under source/walkthru."""
+    source_dir = output_dir / "source" / "walkthru"
+    models = []
+    for filename, model_id, name in WALKTHRU_MODELS:
+        source = source_dir / filename
+        if not source.exists():
+            continue
+        mesh = unigrafix.flatten(source.read_text(encoding="latin-1"), source.name)
+        path = output_dir / "walkthru" / f"{model_id.removeprefix('walkthru-')}.shell.off"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        mesh.write_off(path, f"Soda Hall {name}, from {source.name}")
+        models.append({
+            "id": model_id,
+            "name": name,
+            "source": f"source/walkthru/{filename}",
+            "shell": {
+                "path": str(path.relative_to(output_dir)),
+                "vertices": len(mesh.vertices),
+                "triangles": len(mesh.triangles),
+                "bounds": bounds_json(mesh),
+            },
+        })
+        print(f"{model_id}: {len(mesh.triangles)} triangles from {filename}")
+    return models
 
 
 def copy_sources(mirror, output_dir):
@@ -202,6 +237,7 @@ def main(argv):
         "up": "z",
         "bounds": merged_bounds([f["bounds"] for f in floors]),
         "floors": floors,
+        "walkthru": convert_walkthru(output_dir),
     }
     with open(output_dir / "manifest.json", "w", encoding="utf-8") as out:
         json.dump(manifest, out, indent=1)

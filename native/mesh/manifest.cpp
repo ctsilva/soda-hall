@@ -68,6 +68,17 @@ Floor read_floor(const Json& json, const std::filesystem::path& directory) {
     return floor;
 }
 
+Model read_model(const Json& json, const std::filesystem::path& directory) {
+    Model model;
+    model.id = json.at("id").as_string();
+    model.name = json.at("name").as_string();
+    if (json.get("source").is_string()) {
+        model.source = directory / json.get("source").as_string();
+    }
+    model.shell = read_part(json.at("shell"), directory);
+    return model;
+}
+
 bool close(const glm::vec3& a, const glm::vec3& b) {
     const auto difference = glm::abs(a - b);
     return difference.x <= kBoundsTolerance && difference.y <= kBoundsTolerance &&
@@ -128,6 +139,15 @@ const Floor* Manifest::find_floor(int number) const {
     return nullptr;
 }
 
+const Model* Manifest::find_model(const std::string& id) const {
+    for (const auto& model : walkthru) {
+        if (model.id == id) {
+            return &model;
+        }
+    }
+    return nullptr;
+}
+
 Manifest load_manifest(const std::filesystem::path& path) {
     const auto json = load_json(path);
     Manifest manifest;
@@ -141,6 +161,11 @@ Manifest load_manifest(const std::filesystem::path& path) {
         manifest.bounds = read_bounds(json.get("bounds"));
         for (const auto& floor : json.at("floors").as_array()) {
             manifest.floors.push_back(read_floor(floor, manifest.directory));
+        }
+        if (json.get("walkthru").is_array()) {
+            for (const auto& model : json.get("walkthru").as_array()) {
+                manifest.walkthru.push_back(read_model(model, manifest.directory));
+            }
         }
     } catch (const std::runtime_error& e) {
         throw std::runtime_error(path.string() + ": " + e.what());
@@ -157,6 +182,9 @@ std::vector<std::string> verify_manifest(const Manifest& manifest) {
             verify_part(room.shell, room.name + " shell", problems);
             verify_part(room.furniture, room.name + " furniture", problems);
         }
+    }
+    for (const auto& model : manifest.walkthru) {
+        verify_part(model.shell, model.name, problems);
     }
     return problems;
 }

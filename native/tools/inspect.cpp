@@ -1,5 +1,5 @@
-// Headless dataset inspector: prints the manifest's floors and rooms with their sizes, and
-// with --verify opens every mesh to confirm the manifest matches the files.
+// Headless dataset inspector: prints the manifest's floors, rooms, and standalone models with
+// their sizes, and with --verify opens every mesh to confirm the manifest matches the files.
 #include "mesh/manifest.hpp"
 
 #include <iostream>
@@ -78,6 +78,10 @@ int main(int argc, char** argv) {
             }
         }
         std::cout << "total " << total << " triangles across floor shells and rooms\n";
+        for (const auto& model : manifest.walkthru) {
+            std::cout << model.id << " (" << model.name << "): " << model.shell.triangles
+                      << " triangles from " << model.source.filename().string() << '\n';
+        }
         if (verify) {
             const auto problems = soda::verify_manifest(manifest);
             for (const auto& problem : problems) {

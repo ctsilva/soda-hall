@@ -1,5 +1,5 @@
-// Manifest tests: JSON decoding, path resolution, lookups, and the verify pass against a
-// fixture dataset written into the directory given as the first argument.
+// Manifest tests: JSON decoding, path resolution, floor/room/model lookups, and the verify
+// pass against a fixture dataset written into the directory given as the first argument.
 #include "mesh/json.hpp"
 #include "mesh/manifest.hpp"
 
@@ -40,6 +40,11 @@ const char* kManifest = R"({
                  "triangles": 1, "bounds": {"min": [0, 0, 1], "max": [1, 1, 1]}},
    "objects": {"CHAIR1": 2, "DESK": 1}
   }]
+ }],
+ "walkthru": [{
+  "id": "walkthru-building", "name": "WALKTHRU model", "source": "source/walkthru/csb3r.macro.ug",
+  "shell": {"path": "walkthru/building.shell.off", "vertices": 3, "triangles": 1,
+            "bounds": {"min": [0, 0, 0], "max": [2, 2, 0]}}
  }]
 })";
 
@@ -97,7 +102,14 @@ int main(int argc, char** argv) {
         check(bounds && bounds->max.z == 1 && bounds->max.x == 2, "room bounds merge parts");
         check(!manifest.floors[0].furniture.bounds, "empty part has no bounds");
         check(manifest.floors[0].floorplan.has_value(), "floorplan path");
+        const auto* model = manifest.find_model("walkthru-building");
+        check(model != nullptr && model->shell.triangles == 1 &&
+                  model->source.filename() == "csb3r.macro.ug",
+              "walkthru model decoded");
+        check(manifest.find_model("walkthru-roof") == nullptr, "unknown model");
 
+        write(directory / "walkthru/building.shell.off",
+              "OFF\n3 1 0\n0 0 0\n2 0 0\n2 2 0\n3 0 1 2\n");
         check(soda::verify_manifest(manifest).empty(), "fixture verifies cleanly");
 
         // A wrong triangle count (same vertices and bounds) and a missing file are reported.

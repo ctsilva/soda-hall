@@ -21,8 +21,9 @@ const QString kShowPrefix = "--show=";
 
 int usage() {
     std::cerr << "Usage: soda_viewer [MANIFEST.json] [--show=ID,...] [--capture OUTPUT.png]\n"
-                 "  --show=   comma-separated floors and rooms to show, e.g. floor-3,room-319;\n"
-                 "            floor-3/rooms shows every room on floor 3. Default: every floor.\n"
+                 "  --show=   comma-separated ids to show, e.g. floor-3,room-319 or\n"
+                 "            walkthru-building; floor-3/rooms shows every room on floor 3.\n"
+                 "            Default: every floor's walls.\n"
                  "  --capture save the window and viewport to PNG after painting, then exit\n";
     return kUsageExitCode;
 }

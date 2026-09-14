@@ -35,7 +35,8 @@ no roof, mechanical penthouse, or below-grade levels.*
 | `data/rooms/floor-N/room-XXX.shell.off` | One room's walls, floor, ceiling openings, doors, and windows |
 | `data/rooms/floor-N/room-XXX.furniture.off` | That room's furniture and sculptures |
 | `data/floorplans/floor-N.gif` | The site's floor plan bitmaps |
-| `data/source/` | The original `.wrl.gz` files and index pages, untouched |
+| `data/walkthru/building.shell.off`, `floor-5.shell.off` | The 1994 WALKTHRU UniGrafix models, converted (see below) |
+| `data/source/` | The original `.wrl.gz` files and index pages, untouched, plus `walkthru/` with the UniGrafix files |
 
 Meshes are ASCII OFF files: triangles only, with an `r g b` color in 0..1 after each face,
 and coordinates in the building's own frame (inches, Z up; the building spans about
@@ -161,6 +162,23 @@ Related material still online:
 - [Seth Teller's geometric datasets page](https://people.csail.mit.edu/teller/datasets/datasets.html)
   at MIT hosts the UniGrafix source models the VRML was exported from: the fifth floor
   (`csb5.macro.ug`) and the whole building (`csb3r.macro.ug`).
+
+**The WALKTHRU model.** Those two UniGrafix files are the "U.C. Berkeley Soda Hall
+WALKTHRU Model", version 1.0 of December 1994, built by the UC Berkeley Walkthrough Group
+(Thurman Brown, Rick Bukowski, Laura Downs, Tom Funkhouser, Delnaz Khorramabadi, Carlo
+Séquin, MaryAnn Simmons, and Seth Teller) with Celeste Fowler and Pat Hanrahan of Princeton.
+Copies downloaded from Teller's page on September 14, 2026 are kept under
+`data/source/walkthru/` with their SHA-256 sums, and `tools/unigrafix.py` converts them to
+`data/walkthru/`. They are walls only, floors 3 through 7 with roof structures in the whole
+building file, and they sit in the same coordinate frame as the VRML rooms, so the viewer
+lists them as two extra rows that can be shown next to Kofler's floors. Their permission
+notice, which must stay attached, allows use, copying, and modification, and forbids
+redistribution for payment or commercial exploitation. Please cite the model by that name.
+
+![The 1994 WALKTHRU model of the whole building](native/docs/images/walkthru-building.png)
+
+*The WALKTHRU whole-building model: a closed exterior with roof, terraces, and window
+openings, unlike Kofler's open-topped floor shells.*
 
 **Availability.** The VRML files were published openly on a university web page without a
 stated license, and their author could not be reached. They are redistributed here unchanged

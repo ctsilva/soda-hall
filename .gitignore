@@ -10,6 +10,7 @@ compile_commands.json
 /data/floors/
 /data/rooms/
 /data/manifest.json
+/data/walkthru/
 
 # macOS
 .DS_Store

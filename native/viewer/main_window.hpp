@@ -1,6 +1,7 @@
-// Declares the viewer window: the floor/room tree with visibility checkboxes, display
-// toggles, the selection summary, and manifest loading. Capture mode (capture.cpp) drives the
-// window through these typed control handles rather than by label text.
+// Declares the viewer window: the tree of floors, rooms, and standalone models with
+// visibility checkboxes, display toggles, the selection summary, and manifest loading.
+// Capture mode (capture.cpp) drives the window through these typed control handles rather
+// than by label text.
 #pragma once
 
 #include "mesh/manifest.hpp"
@@ -35,8 +36,9 @@ class MainWindow final : public QMainWindow {
     // reportErrors is false. Nothing is shown until show* is called.
     bool load(const QString& filename, bool reportErrors = true);
 
-    // Shows a floor shell ("floor-3") or a room ("room-319"); false for an unknown id or a
-    // mesh that failed to read (reported the same way as load).
+    // Shows a floor shell ("floor-3"), a room ("room-319"), or a standalone model
+    // ("walkthru-building"); false for an unknown id or a mesh that failed to read (reported
+    // the same way as load).
     bool showPart(const std::string& id, bool visible = true, bool reportErrors = true);
     void showBuilding();  // Every floor shell, no rooms.
     void showFloorRooms(int floor, bool visible);
@@ -78,6 +80,8 @@ class MainWindow final : public QMainWindow {
     QCheckBox* toggle(QMenu*, QVBoxLayout*, const QString& name, bool& flag, const QKeySequence&);
     void applyItem(QTreeWidgetItem* item, bool reportErrors);
     void selectItem(QTreeWidgetItem* item);
+    // Manifest bounds of the floor, room, or model a row stands for.
+    std::optional<soda::Bounds> itemBounds(QTreeWidgetItem* item) const;
     void refreshStatus();
     void reportError(const QString& title, const QString& message, bool reportErrors);
     QTreeWidgetItem* findItem(const std::string& id) const;
@@ -87,5 +91,5 @@ class MainWindow final : public QMainWindow {
     Viewport* viewport_ = nullptr;
     std::shared_ptr<const soda::Manifest> manifest_;
     QString manifestName_;
-    std::vector<QTreeWidgetItem*> items_;  // Every floor and room row, in tree order.
+    std::vector<QTreeWidgetItem*> items_;  // Every floor, room, and model row, in tree order.
 };
