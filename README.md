@@ -166,7 +166,9 @@ Related material still online:
 stated license, and their author could not be reached. They are redistributed here unchanged
 and with credit, as a historical dataset of a well-known building model from the 1990s
 architectural walkthrough literature. If you hold rights to the model and object, open an
-issue and the files will be removed. The conversion tools and the viewer are new work.
+issue and the files will be removed. The conversion tools, the library, the viewer, and this
+documentation are new work under the [MIT License](LICENSE); the license does not extend to
+the model files or the meshes derived from them.
 
 The converted meshes and manifest are attached to each
 [release](https://github.com/ctsilva/soda-hall/releases) as `soda-hall-meshes-<version>.tar.gz`;
