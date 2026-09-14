@@ -134,9 +134,40 @@ the framebuffer after the first paint and exits, for unattended checks:
 Code style follows the repository's `.clang-format`; run it over `native/` before finishing
 a change.
 
-## Credits
+## Provenance and status
 
-The model is Michael Kofler's, produced with the `ug2vrml` exporter from Carlo Séquin's
-Berkeley UniGrafix building database. The original site links a report,
-`vrmljumpthru.ps`, that this mirror does not include. Everything under `data/source/` is his
-work, copied unchanged; the conversion tools and the viewer are new.
+The model is Michael Kofler's, produced with the `ug2vrml` exporter from the UniGrafix
+building database that Carlo Séquin's group at Berkeley built for the UC WalkThru project.
+Kofler published it as the "SodaHall VRML JumpThru" at `http://www.cs.berkeley.edu/~kofler/`
+(also served as `http.cs.berkeley.edu`), last updated May 20, 1998. The room files carry
+April 1998 timestamps and the floor plans December 1996.
+
+**The original site is gone.** As of September 2026 the address redirects to
+`people.eecs.berkeley.edu/~kofler/`, which returns 404. The Wayback Machine holds the main
+page ([August 2000 snapshot](http://web.archive.org/web/20000820115434/http://www.cs.berkeley.edu:80/~kofler/))
+and the accompanying report, `vrmljumpthru.ps`
+([September 2000 snapshot](http://web.archive.org/web/20000917030157/http://www.cs.berkeley.edu:80/~kofler/vrmljumpthru.ps)),
+but not the room and floor files themselves. The copy under `data/source/` was mirrored with
+wget in April 2001 and is, as far as we know, the only surviving copy of the VRML files. It
+is the "standard" version of the site: one gzip-compressed VRML 1.0 file per room with
+furniture inlined, plus one file per floor without furniture. The site also offered an
+"inline" version with furniture in separate files, and mentioned furniture-and-texture
+versions that were never linked; none of those were mirrored.
+
+Related material still online:
+
+- [Carlo Séquin's Soda Hall page](https://people.eecs.berkeley.edu/~sequin/soda/soda.html)
+  still links to Kofler's site from its pictures section.
+- [Seth Teller's geometric datasets page](https://people.csail.mit.edu/teller/datasets/datasets.html)
+  at MIT hosts the UniGrafix source models the VRML was exported from: the fifth floor
+  (`csb5.macro.ug`) and the whole building (`csb3r.macro.ug`).
+
+**Availability.** The VRML files were published openly on a university web page without a
+stated license, and their author could not be reached. They are redistributed here unchanged
+and with credit, as a historical dataset of a well-known building model from the 1990s
+architectural walkthrough literature. If you hold rights to the model and object, open an
+issue and the files will be removed. The conversion tools and the viewer are new work.
+
+The converted meshes and manifest are attached to each
+[release](https://github.com/ctsilva/soda-hall/releases) as `soda-hall-meshes-<version>.tar.gz`;
+unpack it into `data/` to use the viewer without running the converter.
