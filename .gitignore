@@ -1,0 +1,26 @@
+# CMake build trees at the root
+/build/
+/build-*/
+/cmake-build-*/
+CMakeUserPresets.json
+compile_commands.json
+.cache/
+
+# Generated meshes are rebuilt by tools/build_dataset.py from data/source
+/data/floors/
+/data/rooms/
+/data/manifest.json
+
+# macOS
+.DS_Store
+._*
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Captures
+*.viewport.png
+__pycache__/

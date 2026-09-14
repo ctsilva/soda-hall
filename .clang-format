@@ -1,0 +1,32 @@
+# Formatting for native/. Run: clang-format -i $(find native -name "*.cpp" -o -name "*.hpp")
+# or: find native -name '*.cpp' -o -name '*.hpp' | xargs clang-format -i
+BasedOnStyle: LLVM
+Standard: c++20
+IndentWidth: 4
+ColumnLimit: 100
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+AllowShortLambdasOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+BreakBeforeBraces: Attach
+PointerAlignment: Left
+SpaceAfterCStyleCast: false
+SpacesBeforeTrailingComments: 2
+AlignTrailingComments: true
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^"bsp/'
+    Priority: 1
+  - Regex: '^"'
+    Priority: 0
+  - Regex: '^<(Q|glm)'
+    Priority: 2
+  - Regex: '^<'
+    Priority: 3
+NamespaceIndentation: None
+FixNamespaceComments: true
+SeparateDefinitionBlocks: Always
+MaxEmptyLinesToKeep: 1
+InsertBraces: true
