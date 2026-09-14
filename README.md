@@ -180,6 +180,30 @@ redistribution for payment or commercial exploitation. Please cite the model by 
 *The WALKTHRU whole-building model: a closed exterior with roof, terraces, and window
 openings, unlike Kofler's open-topped floor shells.*
 
+**The model in the literature.** This is the building model behind the Berkeley
+walkthrough papers of the early 1990s. Funkhouser and Séquin's
+[*Adaptive Display Algorithm for Interactive Frame Rates During Visualization of Complex
+Virtual Environments*](https://www.cs.princeton.edu/~funk/sig93.pdf) (SIGGRAPH 93) names
+"a model of Soda Hall, the future Computer Science Building at UC Berkeley" as its test case,
+and two of its rooms are identifiable here: Figure 10's lecture hall with its tiers of chairs
+is room 306a, which in this dataset has 90 chairs and one of Séquin's sculptures on the front
+table, and Figure 11's "small library on the sixth floor" is room 681, with the same orange
+armchairs, wood tables, open books, and bookshelves. The paper's own images were rendered
+from the 1994-era UniGrafix data with textures; the furniture in Kofler's 1998 export is a
+later re-modeling of the same rooms. The same building model appears in Teller and Séquin's
+*Visibility Preprocessing for Interactive Walkthroughs* (SIGGRAPH 91), Funkhouser, Séquin,
+and Teller's *Management of Large Amounts of Data in Interactive Building Walkthroughs*
+(Symposium on Interactive 3D Graphics, 1992), and Teller's and Funkhouser's Berkeley
+dissertations (1992 and 1993).
+
+![Room 306a, the lecture hall of Funkhouser and Séquin's Figure 10](native/docs/images/room-306a-lecture-hall.png)
+
+*Room 306a: the lecture hall of the SIGGRAPH 93 paper's Figure 10.*
+
+![Room 681, the library of Funkhouser and Séquin's Figure 11](native/docs/images/room-681-library.png)
+
+*Room 681: the sixth-floor library of the paper's Figure 11.*
+
 **Availability.** The VRML files were published openly on a university web page without a
 stated license, and their author could not be reached. They are redistributed here unchanged
 and with credit, as a historical dataset of a well-known building model from the 1990s
