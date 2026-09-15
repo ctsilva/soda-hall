@@ -3,6 +3,7 @@
 // current; this file owns every GL resource and the camera, nothing about the dataset.
 #include "viewport.hpp"
 
+#include <QElapsedTimer>
 #include <QMouseEvent>
 #include <QOpenGLContext>
 #include <QPainter>
@@ -43,6 +44,7 @@ constexpr double kWheelZoomSensitivity = 0.001;
 constexpr double kMinimumZoomRadiusFactor = 0.01;
 constexpr int kMaximumZoomRadiusFactor = 40;
 constexpr float kColorByteScale = 255.0f;
+constexpr double kNanosecondsPerSecond = 1e9;
 constexpr std::uint8_t kOpaqueAlpha = 255;
 
 std::uint8_t colorByte(float component) {
@@ -412,14 +414,26 @@ void Viewport::paintGL() {
     program_->bind();
     setUniforms(projection, view, true);
     program_->setUniformValue("useOverride", 0);
-    for (const auto& [key, part] : parts_) {
-        if (!part.visible || !kindVisible(part.kind) || part.count == 0) {
-            continue;
+    // In benchmark mode the same parts are drawn several times per paint so that one paint
+    // outlasts a display refresh, and glFinish makes the elapsed time cover the GPU work.
+    QElapsedTimer timer;
+    timer.start();
+    const int passes = std::max(1, benchmarkRepeats);
+    for (int pass = 0; pass < passes; ++pass) {
+        for (const auto& [key, part] : parts_) {
+            if (!part.visible || !kindVisible(part.kind) || part.count == 0) {
+                continue;
+            }
+            glBindVertexArray(part.vao);
+            glDrawArrays(GL_TRIANGLES, 0, part.count);
         }
-        glBindVertexArray(part.vao);
-        glDrawArrays(GL_TRIANGLES, 0, part.count);
     }
     glBindVertexArray(0);
+    if (benchmarkRepeats > 0) {
+        glFinish();
+        benchmarkSeconds += static_cast<double>(timer.nsecsElapsed()) / kNanosecondsPerSecond;
+        benchmarkTriangles += static_cast<std::size_t>(passes) * visibleTriangles();
+    }
 
     if (showGrid) {
         drawLines(grid_, projection, view, kGridColor);

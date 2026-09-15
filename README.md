@@ -126,6 +126,18 @@ paint and exits, for unattended checks:
 ./build-gui/native/soda_viewer data/manifest.json --show=floor-3/rooms --capture floor3.png
 ```
 
+`--benchmark[=REPEATS]` measures how fast the GPU draws whatever is shown: with vertical sync
+off, each paint draws the visible parts REPEATS times (default 20) and waits for the GPU, and
+after about five seconds the viewer prints triangles per second and the time for one full
+scene, then exits. On an Apple M5 with a 10-core GPU, every room with furniture (1.41 million
+triangles, 180 draw calls) draws in about 1.4 ms, roughly 980 million triangles per second;
+the six floor shells alone, whose large slabs cover the viewport many times over, are
+fill-bound at about 260 million per second.
+
+```sh
+./build-gui/native/soda_viewer data/manifest.json --show=rooms --benchmark
+```
+
 ## Layout
 
 - `tools/vrml1.py`: VRML 1.0 subset reader; flattens a file into shell and furniture meshes.

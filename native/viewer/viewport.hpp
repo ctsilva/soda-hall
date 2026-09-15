@@ -59,6 +59,13 @@ class Viewport final : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core
     // Capture runs clear this so a stray mouse or wheel event cannot move the camera.
     bool acceptInput = true;
 
+    // Benchmark mode: draw the visible parts this many times per paint, wait for the GPU to
+    // finish, and add the elapsed time and triangles drawn to the two counters. Zero means
+    // normal painting with no measurement.
+    int benchmarkRepeats = 0;
+    double benchmarkSeconds = 0;
+    std::size_t benchmarkTriangles = 0;
+
     QString rendererError() const {
         return error_;
     }
