@@ -22,8 +22,9 @@ const QString kShowPrefix = "--show=";
 int usage() {
     std::cerr << "Usage: soda_viewer [MANIFEST.json] [--show=ID,...] [--capture OUTPUT.png]\n"
                  "  --show=   comma-separated ids to show, e.g. floor-3,room-319 or\n"
-                 "            walkthru-building; floor-3/rooms shows every room on floor 3.\n"
-                 "            Default: every floor's walls.\n"
+                 "            walkthru-building; floor-3/rooms shows every room on floor 3;\n"
+                 "            rooms shows every room with its furniture; building shows\n"
+                 "            every floor's walls (the default).\n"
                  "  --capture save the window and viewport to PNG after painting, then exit\n";
     return kUsageExitCode;
 }
@@ -72,7 +73,13 @@ int main(int argc, char** argv) {
         if (show) {
             for (const auto& id : show->split(',', Qt::SkipEmptyParts)) {
                 const auto name = id.trimmed();
-                if (name.startsWith("floor-") && name.endsWith("/rooms")) {
+                if (name == "rooms") {
+                    for (const auto& floor : window.manifest()->floors) {
+                        window.showFloorRooms(floor.number, true);
+                    }
+                } else if (name == "building") {
+                    window.showBuilding();
+                } else if (name.startsWith("floor-") && name.endsWith("/rooms")) {
                     const auto number = name.mid(6, name.size() - 6 - 6).toInt();
                     window.showFloorRooms(number, true);
                 } else if (!window.showPart(name.toStdString(), true, report)) {

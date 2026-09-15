@@ -114,11 +114,15 @@ a row frames it.
 | Double-click the view | Frame the visible parts |
 
 Command line: `soda_viewer [MANIFEST.json] [--show=IDS] [--capture OUTPUT.png]`.
-`--show` takes a comma-separated list such as `floor-3,room-319` or `floor-3/rooms` for a
-whole floor; without it every floor's walls are shown. `--capture` saves the window and
-the framebuffer after the first paint and exits, for unattended checks:
+`--show` takes a comma-separated list of ids such as `floor-3`, `room-319`, or
+`walkthru-building`, plus three shortcuts: `floor-3/rooms` for every room on a floor,
+`rooms` for every room in the building with its furniture, and `building` for every floor's
+walls, which is what you get without the flag. Furniture belongs to rooms, so it appears
+whenever a room is shown. `--capture` saves the window and the framebuffer after the first
+paint and exits, for unattended checks:
 
 ```sh
+./build-gui/native/soda_viewer data/manifest.json --show=rooms
 ./build-gui/native/soda_viewer data/manifest.json --show=floor-3/rooms --capture floor3.png
 ```
 
